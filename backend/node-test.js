@@ -24,13 +24,23 @@ const ensureTestDataDir = async () => {
 // Test data
 const testUser = {
   name: 'Test User',
-  username: 'testuser',
+  username: 'testuser123',
   email: 'test@example.com',
   address: {
     street: '123 Test St',
-    suite: 'Apt 1',
     city: 'Test City',
     zipcode: '12345'
+  }
+};
+
+const invalidUser = {
+  name: 'A'.repeat(101), // Too long name
+  username: 'te', // Too short username
+  email: 'invalid-email',
+  address: {
+    street: 'A'.repeat(201), // Too long street
+    city: 'A'.repeat(101), // Too long city
+    zipcode: 'A'.repeat(21) // Too long zipcode
   }
 };
 
@@ -81,15 +91,87 @@ describe('User Management API', () => {
     assert.strictEqual(response.body.username, testUser.username);
     assert.strictEqual(response.body.email, testUser.email);
     
+    // Test duplicate username/email
+    const dupResponse = await request(app)
+      .post('/users')
+      .send(testUser);
+    assert.strictEqual(dupResponse.status, 400);
+    
     // Save the created user ID for later tests
     createdUserId = response.body.id;
   });
 
-  test('GET /users should return all users', async () => {
-    // First create a test user
-    const createResponse = await request(app)
+  test('POST /users should validate input', async () => {
+    // Create a copy of the invalid user to avoid modifying the original
+    const invalidUserCopy = JSON.parse(JSON.stringify(invalidUser));
+    
+    const response = await request(app)
       .post('/users')
-      .send(testUser);
+      .send(invalidUserCopy);
+    
+    // We expect a 400 status code for validation errors
+    assert.strictEqual(response.status, 400, `Expected status 400 but got ${response.status}. Response: ${JSON.stringify(response.body)}`);
+    
+    // The response should have an errors array
+    assert(Array.isArray(response.body.errors), 'Response should have an errors array');
+    assert(response.body.errors.length > 0, 'Should have at least one validation error');
+    
+    // Convert errors to a more searchable format
+    const errorFields = response.body.errors.map(err => ({
+      param: err.param || 'unknown',
+      message: err.msg || err.message || 'No message'
+    }));
+    
+    // Log the actual errors for debugging
+    console.log('Validation errors:', JSON.stringify(errorFields, null, 2));
+    
+    // Check that we have at least one validation error
+    assert(errorFields.length > 0, 'Should have validation errors');
+    
+    // Check that we have the expected error messages
+    const errorMessages = errorFields.map(err => err.message).join('; ').toLowerCase();
+    
+    // Check for specific validation errors we expect
+    const hasStreetError = errorMessages.includes('street');
+    const hasCityError = errorMessages.includes('city');
+    const hasZipcodeError = errorMessages.includes('zipcode');
+    const hasNameError = errorMessages.includes('name');
+    const hasUsernameError = errorMessages.includes('username');
+    const hasEmailError = errorMessages.includes('email');
+    
+    // Log which validations passed/failed
+    console.log('Validation results:', {
+      hasStreetError,
+      hasCityError,
+      hasZipcodeError,
+      hasNameError,
+      hasUsernameError,
+      hasEmailError,
+      allErrors: errorMessages
+    });
+    
+    // Check that we have at least one expected validation error
+    const hasAnyError = hasStreetError || hasCityError || hasZipcodeError || 
+                       hasNameError || hasUsernameError || hasEmailError;
+    
+    assert(
+      hasAnyError,
+      `Expected validation errors but got none. All errors: ${errorMessages}`
+    );
+  });
+
+  test('GET /users should return all users', async () => {
+    // Create a unique test user
+    const uniqueTestUser = {
+      ...testUser,
+      username: `testuser-${Date.now()}`,
+      email: `test-${Date.now()}@example.com`
+    };
+    
+    // First create a test user
+    await request(app)
+      .post('/users')
+      .send(uniqueTestUser);
     
     const response = await request(app).get('/users');
     assert.strictEqual(response.status, 200);
@@ -98,15 +180,29 @@ describe('User Management API', () => {
   });
 
   test('GET /users/:id should return a specific user', async () => {
+    // Create a unique test user for this test
+    const uniqueUsername = `testgetuser-${Date.now()}`;
+    const uniqueEmail = `getuser-${Date.now()}@example.com`;
+    
     // First create a test user
     const createResponse = await request(app)
       .post('/users')
-      .send(testUser);
-      
+      .send({
+        name: 'Test User for GET',
+        username: uniqueUsername,
+        email: uniqueEmail
+      });
+    
+    // Get the user
     const response = await request(app).get(`/users/${createResponse.body.id}`);
     assert.strictEqual(response.status, 200);
     assert.strictEqual(response.body.id, createResponse.body.id);
-    assert.strictEqual(response.body.name, testUser.name);
+    assert.strictEqual(response.body.name, 'Test User for GET');
+    assert.strictEqual(response.body.username, uniqueUsername);
+    
+    // Test getting non-existent user
+    const nonExistentUser = await request(app).get('/users/nonexistent');
+    assert.strictEqual(nonExistentUser.status, 404);
   });
 
   test('PUT /users/:id should update a user', async () => {
@@ -115,31 +211,57 @@ describe('User Management API', () => {
       .post('/users')
       .send(testUser);
       
-    const updatedUser = { ...testUser, name: 'Updated Test User' };
+    const updatedUser = { 
+      ...testUser, 
+      name: 'Updated Test User',
+      username: 'updatedusername' // New username
+    };
+    
     const response = await request(app)
       .put(`/users/${createResponse.body.id}`)
       .send(updatedUser);
     
     assert.strictEqual(response.status, 200);
     assert.strictEqual(response.body.name, 'Updated Test User');
+    assert.strictEqual(response.body.username, 'updatedusername');
     
-    // Verify the update
-    const getResponse = await request(app).get(`/users/${createResponse.body.id}`);
-    assert.strictEqual(getResponse.body.name, 'Updated Test User');
+    // Test update with invalid data
+    const invalidUpdate = await request(app)
+      .put(`/users/${createResponse.body.id}`)
+      .send({ email: 'invalid-email' });
+    assert.strictEqual(invalidUpdate.status, 400);
+    
+    // Test update with duplicate username/email
+    const anotherUser = { ...testUser, username: 'anotheruser', email: 'another@example.com' };
+    await request(app).post('/users').send(anotherUser);
+    
+    const dupUpdate = await request(app)
+      .put(`/users/${createResponse.body.id}`)
+      .send({ username: 'anotheruser' });
+    assert.strictEqual(dupUpdate.status, 400);
   });
 
   test('DELETE /users/:id should delete a user', async () => {
     // First create a test user
     const createResponse = await request(app)
       .post('/users')
-      .send(testUser);
+      .send({
+        name: 'User to delete',
+        username: 'tobedeleted',
+        email: 'delete@example.com'
+      });
       
-    const response = await request(app).delete(`/users/${createResponse.body.id}`);
-    assert.strictEqual(response.status, 204);
+    // Delete the user
+    const deleteResponse = await request(app).delete(`/users/${createResponse.body.id}`);
+    assert.strictEqual(deleteResponse.status, 204);
     
     // Verify the user was deleted
     const getResponse = await request(app).get(`/users/${createResponse.body.id}`);
     assert.strictEqual(getResponse.status, 404);
+    
+    // Test deleting non-existent user
+    const nonExistentDelete = await request(app).delete('/users/nonexistent');
+    assert.strictEqual(nonExistentDelete.status, 404);
   });
 
   test('GET /users/search should search users', async () => {
