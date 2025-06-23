@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getUserById, createUser, updateUser } from '../../services/api';
 
-const UserForm = () => {
+const UserForm = ({ onUserSaved }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
@@ -80,6 +80,12 @@ const UserForm = () => {
       } else {
         await createUser(formData);
       }
+      
+      // Call the onUserSaved callback if provided
+      if (onUserSaved) {
+        await onUserSaved();
+      }
+      
       navigate('/');
     } catch (err) {
       setError('Failed to save user. Please try again.');

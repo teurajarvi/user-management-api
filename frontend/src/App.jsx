@@ -83,8 +83,22 @@ function App() {
           />
         } 
       />
-      <Route path="/users/new" element={<UserForm />} />
-      <Route path="/users/:id" element={<UserForm />} />
+      <Route 
+        path="/users/new" 
+        element={
+          <UserForm 
+            onUserSaved={() => fetchUsers()} 
+          />
+        } 
+      />
+      <Route 
+        path="/users/:id" 
+        element={
+          <UserForm 
+            onUserSaved={() => fetchUsers()} 
+          />
+        } 
+      />
     </Routes>
   );
 }
