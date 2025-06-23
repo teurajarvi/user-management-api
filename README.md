@@ -1,4 +1,4 @@
-# User Management API
+# User Management System
 
 A full-stack user management application with a React frontend and Node.js/Express backend. This application allows you to perform CRUD operations on user data with a clean, responsive interface.
 
@@ -7,38 +7,41 @@ A full-stack user management application with a React frontend and Node.js/Expre
 ### Backend
 - RESTful API endpoints for user management
 - File-based storage using JSON
-- Input validation
-- Error handling
+- Input validation with Express Validator
+- Comprehensive error handling
 - CORS support
+- Environment configuration
 
 ### Frontend
-- Responsive design
-- Real-time search functionality
-- Form validation
+- Responsive, mobile-first design with Tailwind CSS
+- Real-time search and filtering
+- Client-side form validation
 - Loading states and error handling
-- Clean, modern UI
+- Modern UI components
+- Optimized build with Vite
 
 ## Tech Stack
 
 ### Backend
-- Node.js
-- Express
-- Express Validator
-- CORS
-- File System (fs) module
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Validation**: Express Validator
+- **Security**: CORS
+- **File System**: Node.js fs module
 
 ### Frontend
-- React
-- React Router
-- Axios for HTTP requests
-- CSS Modules for styling
-- Vite for development server and build
+- **UI Library**: React 18
+- **Routing**: React Router v6
+- **Styling**: Tailwind CSS 3 with PostCSS
+- **HTTP Client**: Axios
+- **Build Tool**: Vite
+- **Package Manager**: npm
 
 ## Project Structure
 
 ```
 user-management-api/
-├── backend/               # Backend server
+├── backend/              # Backend server
 │   ├── data/             # JSON data storage
 │   ├── routes/           # API routes
 │   ├── app.js            # Express app setup
@@ -47,8 +50,13 @@ user-management-api/
 │   ├── public/           # Static files
 │   ├── src/
 │   │   ├── components/   # React components
+│   │   │   ├── common/   # Shared components
+│   │   │   ├── UserForm/ # User form component
+│   │   │   └── UserList/ # User list component
 │   │   ├── services/     # API service
 │   │   ├── App.jsx       # Main App component
+│   │   ├── App.css       # App-specific styles
+│   │   ├── index.css     # Global styles and Tailwind imports
 │   │   └── main.jsx      # Entry point
 │   └── package.json      # Frontend dependencies
 └── README.md             # This file
@@ -58,46 +66,91 @@ user-management-api/
 
 ### Prerequisites
 
-- Node.js (v14 or later)
-- npm (comes with Node.js)
+- Node.js (v16 or later)
+- npm (v8 or later, comes with Node.js)
+- Git (for version control)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/teurajarvi/user-management-api.git
    cd user-management-api
    ```
 
-2. **Install backend dependencies**
+2. **Set up the backend**
    ```bash
    cd backend
    npm install
    ```
 
-3. **Install frontend dependencies**
+3. **Set up the frontend**
    ```bash
    cd ../frontend
    npm install
    ```
+   
+4. **Environment Setup**
+   - Copy `.env.example` to `.env` in both `backend` and `frontend` directories
+   - Update the environment variables as needed
 
 ## Running the Application
 
-### Start the Backend Server
+### Development Mode
 
+#### Backend Server
 From the `backend` directory:
 
 ```bash
-npm start
-# or for development with auto-reload
+# Start the backend server with auto-reload
 npm run dev
 ```
 
-The backend server will start on `http://localhost:3000`
+The backend API will be available at `http://localhost:3000`
 
-### Start the Frontend Development Server
-
+#### Frontend Development Server
 From the `frontend` directory:
+
+```bash
+# Start the Vite development server
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173` (default Vite port)
+
+### Production Build
+
+1. **Build the frontend**:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+   This will create an optimized production build in the `dist` directory.
+
+2. **Start the production server**:
+   ```bash
+   # From the backend directory
+   npm start
+   ```
+
+## Working with Tailwind CSS
+
+This project uses Tailwind CSS for styling. Here's how to work with it:
+
+- **Adding new styles**: Use Tailwind's utility classes directly in your components
+- **Customizing the theme**: Edit `tailwind.config.js` in the frontend directory
+- **Adding custom CSS**: Import your CSS files in `index.css`
+
+Example component with Tailwind classes:
+```jsx
+function Button({ children }) {
+  return (
+    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+      {children}
+    </button>
+  );
+}
+```
 
 ```bash
 npm run dev
