@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -26,7 +30,8 @@ h1, h2, h3, h4 {
   color: #2c3e50;
 }
 
-button {
+/* Base button styles - only apply to buttons without utility classes */
+button:not([class*="bg-"]):not([class*="text-"]):not([class*="border-"]):not([class*="rounded-"]) {
   background-color: #3498db;
   color: white;
   border: none;
@@ -37,15 +42,15 @@ button {
   transition: background-color 0.2s;
 }
 
-button:hover {
+button:not([class*="bg-"]):not([class*="text-"]):hover {
   background-color: #2980b9;
 }
 
-button.danger {
+button.danger:not([class*="bg-"]) {
   background-color: #e74c3c;
 }
 
-button.danger:hover {
+button.danger:not([class*="bg-"]):hover {
   background-color: #c0392b;
 }
 
