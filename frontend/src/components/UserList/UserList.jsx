@@ -71,7 +71,28 @@ const UserList = ({ users, onDelete, searchTerm, onSearchChange }) => {
                   <div className="ml-4 flex-shrink-0 flex space-x-2">
                     <Link 
                       to={`/users/${user.id}`}
-                      className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+                      className="button"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '0.5rem 1rem',
+                        height: '38px',
+                        backgroundColor: '#3498db',
+                        color: 'white',
+                        textDecoration: 'none',
+                        borderRadius: '4px',
+                        fontWeight: '500',
+                        textAlign: 'center',
+                        transition: 'background-color 0.2s',
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.875rem',
+                        lineHeight: '1.25',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2980b9'}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3498db'}
                     >
                       Edit
                     </Link>
