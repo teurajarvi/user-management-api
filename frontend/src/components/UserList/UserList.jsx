@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 const UserList = ({ users, onDelete, searchTerm, onSearchChange }) => {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(null);
+  
+  const handleDeleteClick = (userId, e) => {
+    e.preventDefault();
+    setDeleteModalOpen(userId);
+  };
   return (
     <div className="container">
       <h1>User Management</h1>
@@ -97,11 +104,23 @@ const UserList = ({ users, onDelete, searchTerm, onSearchChange }) => {
                       Edit
                     </Link>
                     <button 
-                      onClick={() => onDelete(user.id)}
+                      onClick={(e) => handleDeleteClick(user.id, e)}
                       className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150"
                     >
                       Delete
                     </button>
+                    <ConfirmationModal
+                      isOpen={deleteModalOpen === user.id}
+                      onClose={() => setDeleteModalOpen(null)}
+                      onConfirm={() => {
+                        onDelete(user.id);
+                        setDeleteModalOpen(null);
+                      }}
+                      title="Delete User"
+                      message={`Are you sure you want to delete ${user.name}? This action cannot be undone.`}
+                      confirmText="Delete"
+                      cancelText="Cancel"
+                    />
                   </div>
                 </div>
               </div>
