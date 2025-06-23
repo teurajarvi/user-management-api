@@ -6,7 +6,7 @@ A full-stack user management application with a React frontend and Node.js/Expre
 
 ### Backend
 - RESTful API endpoints for user management
-- File-based storage using JSON
+- File-based storage using JSON (Although the initial dataset contains more fields, this application uses a schemaless data store (a JSON file), so the data provided through the API includes fewer fields. The structure is intentionally kept flexible, and only the relevant fields used by the application are included in each entry.)
 - Input validation with Express Validator
 - Comprehensive error handling
 - CORS support
@@ -28,6 +28,8 @@ A full-stack user management application with a React frontend and Node.js/Expre
 - **Validation**: Express Validator
 - **Security**: CORS
 - **File System**: Node.js fs module
+- **Testing**: Jest, Supertest
+- **Code Coverage**: Jest coverage reports
 
 ### Frontend
 - **UI Library**: React 18
@@ -41,33 +43,111 @@ A full-stack user management application with a React frontend and Node.js/Expre
 
 ```
 user-management-api/
-├── backend/              # Backend server
-│   ├── data/             # JSON data storage
-│   ├── routes/           # API routes
-│   ├── app.js            # Express app setup
-│   └── package.json      # Backend dependencies
-├── frontend/             # Frontend application
-│   ├── public/           # Static files
+├── backend/                      # Backend server
+│   ├── __tests__/                # Test files
+│   │   ├── routes/               # Route tests
+│   │   │   ├── users.test.js     # User route tests
+│   │   │   └── search.test.js    # Search route tests
+│   │   └── utils/                # Utility tests
+│   │       └── dataStore.test.js # Data store tests
+│   ├── data/                     # JSON data storage
+│   ├── routes/                   # API routes
+│   ├── utils/                    # Utility functions
+│   ├── app.js                    # Express app setup
+│   └── package.json              # Backend dependencies
+├── frontend/                     # Frontend application
+│   ├── public/                   # Static files
 │   ├── src/
-│   │   ├── components/   # React components
-│   │   │   ├── common/   # Shared components
-│   │   │   ├── UserForm/ # User form component
-│   │   │   └── UserList/ # User list component
-│   │   ├── services/     # API service
-│   │   ├── App.jsx       # Main App component
-│   │   ├── App.css       # App-specific styles
-│   │   ├── index.css     # Global styles and Tailwind imports
-│   │   └── main.jsx      # Entry point
-│   └── package.json      # Frontend dependencies
-└── README.md             # This file
+│   │   ├── components/           # React components
+│   │   │   ├── common/           # Shared components
+│   │   │   ├── UserForm/         # User form component
+│   │   │   └── UserList/         # User list component
+│   │   ├── services/             # API service
+│   │   ├── App.jsx               # Main App component
+│   │   ├── App.css               # App-specific styles
+│   │   ├── index.css             # Global styles and Tailwind imports
+│   │   └── main.jsx              # Entry point
+│   └── package.json              # Frontend dependencies
+└── README.md                     # This file
 ```
+
+## Running Tests
+
+The backend includes a comprehensive test suite using Node's built-in test runner and Supertest. The tests cover all API endpoints and include proper setup and teardown.
+
+### Running the Tests
+
+```bash
+# Navigate to the backend directory
+cd backend
+
+# Install dependencies (if not already installed)
+npm install
+
+# Run all tests
+npm test
+
+# Run tests in watch mode (auto-rerun on file changes)
+npm run test:watch
+```
+
+### Test Structure
+
+Tests are located in `node-test.js` and cover:
+
+- **API Endpoints**: All CRUD operations (Create, Read, Update, Delete)
+- **Search Functionality**: Case-insensitive search across user fields
+- **Error Handling**: Proper error responses for invalid requests
+- **Edge Cases**: Testing with various input scenarios
+
+### Writing Tests
+
+Tests are written using Node's built-in `test` module and follow this structure:
+
+```javascript
+const { test, describe, before, after } = require('node:test');
+const assert = require('node:assert');
+const request = require('supertest');
+const { app, closeServer } = require('./app');
+
+describe('Feature Name', () => {
+  // Setup before tests run
+  before(async () => {
+    // Test setup code
+  });
+
+  // Cleanup after tests complete
+  after(async () => {
+    await closeServer();
+  });
+
+  test('should do something', async () => {
+    // Test implementation
+  });
+});
+```
+
+### Test Output
+
+When tests run, you'll see detailed output showing:
+- Passing/failing tests
+- Execution time for each test
+- Any errors or assertions that failed
+- Summary of test results
+
+### Debugging Tests
+
+To debug tests:
+1. Add `console.log()` statements in your test or application code
+2. Run a single test file with `node --inspect-brk node-test.js`
+3. Use Chrome DevTools or VS Code's debugger to step through the code
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or later)
-- npm (v8 or later, comes with Node.js)
+- Node.js (v14 or later)
+- npm (v6 or later), comes with Node.js
 - Git (for version control)
 
 ### Installation
@@ -89,10 +169,6 @@ user-management-api/
    cd ../frontend
    npm install
    ```
-   
-4. **Environment Setup**
-   - Copy `.env.example` to `.env` in both `backend` and `frontend` directories
-   - Update the environment variables as needed
 
 ## Running the Application
 

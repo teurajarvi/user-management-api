@@ -4,16 +4,27 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const router = express.Router();
-const DATA_FILE = path.join(__dirname, '../data/users.json');
+const DATA_FILE = process.env.NODE_ENV === 'test' 
+  ? path.join(__dirname, '../data/test-users.json')
+  : path.join(__dirname, '../data/users.json');
 
 // Helper function to read users
 const readUsers = async () => {
   try {
-    const data = await fs.readFile(DATA_FILE, 'utf8');
+    // Read file and remove BOM if present
+    let data = await fs.readFile(DATA_FILE, 'utf8');
+    data = data.replace(/^\uFEFF/, ''); // Remove BOM
+    
+    // If file is empty or contains only whitespace, return empty array
+    if (!data.trim()) {
+      return [];
+    }
+    
     return JSON.parse(data);
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      await fs.writeFile(DATA_FILE, JSON.stringify([], null, 2));
+    if (error.code === 'ENOENT' || error instanceof SyntaxError) {
+      // If file doesn't exist or contains invalid JSON, create/overwrite with empty array
+      await fs.writeFile(DATA_FILE, JSON.stringify([], null, 2), 'utf8');
       return [];
     }
     throw error;
