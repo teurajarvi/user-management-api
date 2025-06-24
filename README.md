@@ -20,6 +20,15 @@ A full-stack user management application with a React frontend and Node.js/Expre
 - 🎨 Modern UI components
 - ⚡ Optimized build with Vite
 
+### Improvements needed
+- Improve Validation: Consistently apply validation middleware across all routes.
+- Add Configuration Management: Use dotenv for environment-specific configurations.
+- Enhance Testing: Add more test cases and consider using mocks for file operations.
+- Improve Security: Implement rate limiting and enhance input sanitization.
+- Add API Documentation: Use Swagger/OpenAPI to document the API.
+- Enhance Logging: Implement structured logging with different log levels.
+
+
 ## 🛠️ Tech Stack
 
 ### Backend
