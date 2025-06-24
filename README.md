@@ -28,7 +28,6 @@ A full-stack user management application with a React frontend and Node.js/Expre
 - Add API Documentation: Use Swagger/OpenAPI to document the API.
 - Enhance Logging: Implement structured logging with different log levels.
 
-
 ## 🛠️ Tech Stack
 
 ### Backend
@@ -99,22 +98,6 @@ The frontend will be available at `http://localhost:5173`
 - `POST /api/users` - Create a new user
 - `PUT /api/users/:id` - Update a user
 - `DELETE /api/users/:id` - Delete a user
-
-## 🛠 Development
-
-### Backend Development
-
-```bash
-cd backend
-npm run dev  # Start with nodemon for hot-reloading
-```
-
-### Frontend Development
-
-```bash
-cd frontend
-npm run dev  # Start Vite dev server
-```
 
 ## Project Structure
 
@@ -420,38 +403,9 @@ GET /users/search?q=john
 
 The backend uses a file-based JSON storage system for simplicity. All data is stored in `backend/data/users.json`.
 
-**File Structure**
-   ```
-   backend/
-   ├── data/          # Data storage (JSON files)
-   ├── routes/        # API route handlers
-   │   └── users.js   # User-related routes
-   ├── middleware/    # Custom middleware
-   ├── utils/         # Utility functions
-   ├── app.js         # Express application setup
-   └── package.json   # Dependencies and scripts
-   ```
-
 ### Frontend Development
 
 The frontend is a React application built with Vite, featuring hot module replacement for a smooth development experience.
-
-
-**File Structure**
-   ```
-   frontend/
-   ├── public/          # Static assets
-   └── src/
-       ├── assets/      # Images, fonts, etc.
-       ├── components/  # Reusable components
-       ├── contexts/    # React contexts
-       ├── hooks/       # Custom hooks
-       ├── services/    # API services
-       ├── styles/      # Global styles
-       ├── utils/       # Utility functions
-       ├── App.jsx      # Root component
-       └── main.jsx     # Application entry point
-   ```
 
 ### Code Quality
 
