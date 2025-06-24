@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1750728941004",
+    "name": "Test User",
+    "username": "testgetuser_1750728940990",
+    "email": "getuser_1750728940990@example.com",
+    "address": {
+      "street": "123 Test St",
+      "city": "Test City",
+      "zipcode": "12345",
+      "geo": {
+        "lat": "",
+        "lng": ""
+      }
+    },
+    "phone": "",
+    "website": "",
+    "company": {
+      "name": "",
+      "catchPhrase": "",
+      "bs": ""
+    }
+  }
+]
