@@ -228,5 +228,27 @@
       "catchPhrase": "Centralized empowering task-force",
       "bs": "target end-to-end models"
     }
+  },
+  {
+    "id": 11,
+    "name": "Jari-Pekka Teurajärvi",
+    "username": "teurastaja",
+    "email": "teurastaja@teurastaja.com",
+    "address": {
+      "street": "Takalonpisto 5",
+      "city": "Oulu",
+      "zipcode": "90240",
+      "geo": {
+        "lat": "",
+        "lng": ""
+      }
+    },
+    "phone": "",
+    "website": "",
+    "company": {
+      "name": "",
+      "catchPhrase": "",
+      "bs": ""
+    }
   }
 ]

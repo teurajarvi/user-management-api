@@ -197,8 +197,12 @@ router.post('/',
     }
     
     // Create a new user with proper address handling (no timestamps)
+    // Generate new id as max existing id + 1 (as integer)
+    const maxId = users.length > 0
+      ? Math.max(...users.map(u => parseInt(u.id, 10) || 0))
+      : 0;
     const newUser = { 
-      id: Date.now().toString(), 
+      id: maxId + 1,
       name: req.body.name,
       username: req.body.username,
       email: req.body.email,
