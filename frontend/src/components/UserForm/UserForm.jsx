@@ -118,10 +118,22 @@ const UserForm = ({ onUserSaved }) => {
     setError('');
 
     try {
+      // Create a properly structured user object
+      const userData = {
+        ...formData,
+        // Ensure address is a proper object
+        address: {
+          street: formData.address.street,
+          city: formData.address.city,
+          zipcode: formData.address.zipcode
+        }
+      };
+
+      console.log('Submitting userData:', userData, 'Type of address:', typeof userData.address, userData.address);
       if (isEditMode) {
-        await updateUser(id, formData);
+        await updateUser(id, userData);
       } else {
-        await createUser(formData);
+        await createUser(userData);
       }
       
       // Call the onUserSaved callback if provided

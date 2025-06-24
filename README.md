@@ -10,14 +10,14 @@ A full-stack user management application with a React frontend and Node.js/Expre
 - 🔒 Input validation with Express Validator
 - 🛡️ Comprehensive error handling and CORS protection
 - ⚙️ Environment-based configuration
-- 🧪 Comprehensive test coverage with Node's test runner
+- 🚦 Graceful startup and shutdown handling
 
 ### Frontend
 - 📱 Responsive, mobile-first design with Tailwind CSS
 - 🔍 Real-time search and filtering
 - 📝 Client-side form validation
 - ⏳ Loading states and error handling
-- 🎨 Modern UI components with dark mode support
+- 🎨 Modern UI components
 - ⚡ Optimized build with Vite
 
 ## 🛠️ Tech Stack
@@ -27,74 +27,122 @@ A full-stack user management application with a React frontend and Node.js/Expre
 - **Framework**: Express.js
 - **Validation**: Express Validator
 - **Security**: CORS, Input sanitization
-- **Testing**: Node.js test runner, Supertest
 - **Development**: Nodemon for hot-reloading
 
 ### Frontend
 - **UI Library**: React 18
-- **State Management**: React Context API
-- **Styling**: Tailwind CSS 3 with PostCSS
-- **Routing**: React Router v6
-- **HTTP Client**: Axios
+- **Styling**: Tailwind CSS with PostCSS
 - **Build Tool**: Vite
 - **Package Manager**: npm
 
-## Features
+## 🚀 Getting Started
 
-### Backend
-- RESTful API endpoints for user management
-- File-based storage using JSON (Although the initial dataset contains more fields, this application uses a schemaless data store (a JSON file), so the data provided through the API includes fewer fields. The structure is intentionally kept flexible, and only the relevant fields used by the application are included in each entry.)
-- Input validation with Express Validator
-- Comprehensive error handling
-- CORS support
-- Environment configuration
+### Prerequisites
 
-### Frontend
-- Responsive, mobile-first design with Tailwind CSS
-- Real-time search and filtering
-- Client-side form validation
-- Loading states and error handling
-- Modern UI components
-- Optimized build with Vite
+- Node.js (v18 or later)
+- npm (comes with Node.js)
 
-## Tech Stack
+### Installation
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Validation**: Express Validator
-- **Security**: CORS
-- **File System**: Node.js fs module
-- **Testing**: Jest, Supertest
-- **Code Coverage**: Jest coverage reports
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd user-management-api
+   ```
 
-### Frontend
-- **UI Library**: React 18
-- **Routing**: React Router v6
-- **Styling**: Tailwind CSS 3 with PostCSS
-- **HTTP Client**: Axios
-- **Build Tool**: Vite
-- **Package Manager**: npm
+2. **Set up the backend**
+   ```bash
+   cd backend
+   npm install
+   ```
+
+3. **Set up the frontend**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+## 🏃‍♂️ Running the Application
+
+### Start the Backend
+
+```bash
+cd backend
+npm start
+```
+
+The API will be available at `http://localhost:3000`
+
+### Start the Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+## 🌐 API Endpoints
+
+- `GET /api/health` - Health check endpoint
+- `GET /api/users` - Get all users
+- `GET /api/users/:id` - Get a single user
+- `POST /api/users` - Create a new user
+- `PUT /api/users/:id` - Update a user
+- `DELETE /api/users/:id` - Delete a user
+
+## 🛠 Development
+
+### Backend Development
+
+```bash
+cd backend
+npm run dev  # Start with nodemon for hot-reloading
+```
+
+### Frontend Development
+
+```bash
+cd frontend
+npm run dev  # Start Vite dev server
+```
+
+## 🧹 Cleaning Up
+
+To remove temporary files and dependencies:
+
+```bash
+# In both backend/ and frontend/ directories
+rm -rf node_modules package-lock.json
+```
 
 ## Project Structure
 
 ```
 user-management-api/
-├── backend/                      # Backend server
-│   ├── __tests__/                # Test files
-│   │   ├── routes/               # Route tests
-│   │   │   ├── users.test.js     # User route tests
-│   │   │   └── search.test.js    # Search route tests
-│   │   └── utils/                # Utility tests
-│   │       └── dataStore.test.js # Data store tests
-│   ├── data/                     # JSON data storage
-│   ├── routes/                   # API routes
-│   ├── utils/                    # Utility functions
-│   ├── app.js                    # Express app setup
-│   └── package.json              # Backend dependencies
-├── frontend/                     # Frontend application
-│   ├── public/                   # Static files
-│   ├── src/
+├── backend/               # Backend server
+│   ├── data/              # JSON data storage
+│   ├── routes/            # API route handlers
+│   ├── utils/             # Utility functions
+│   ├── app.js             # Main application file
+│   ├── working-server.js  # Production server entry point
+│   └── package.json
+└── frontend/              # Frontend application
+    ├── src/              # React application source
+    ├── public/           # Static assets
+    ├── index.html        # Main HTML file
+    └── package.json
+```
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+  Made with ❤️ by Your Name
+</div>
 │   │   ├── components/           # React components
 │   │   │   ├── common/           # Shared components
 │   │   │   ├── UserForm/         # User form component
@@ -344,9 +392,7 @@ GET /users
       "street": "Kulas Light",
       "city": "Gwenborough",
       "zipcode": "92998-3874"
-    },
-    "createdAt": "2025-06-23T20:00:00.000Z",
-    "updatedAt": "2025-06-23T20:00:00.000Z"
+    }
   }
 ]
 ```
@@ -369,9 +415,7 @@ GET /users/:id
     "street": "Kulas Light",
     "city": "Gwenborough",
     "zipcode": "92998-3874"
-  },
-  "createdAt": "2025-06-23T20:00:00.000Z",
-  "updatedAt": "2025-06-23T20:00:00.000Z"
+  }
 }
 ```
 
@@ -402,9 +446,7 @@ Content-Type: application/json
     "street": "123 Main St",
     "city": "Anytown",
     "zipcode": "12345"
-  },
-  "createdAt": "2025-06-23T21:00:00.000Z",
-  "updatedAt": "2025-06-23T21:00:00.000Z"
+  }
 }
 ```
 
@@ -429,9 +471,7 @@ Content-Type: application/json
     "street": "123 Main St",
     "city": "Anytown",
     "zipcode": "12345"
-  },
-  "createdAt": "2025-06-23T21:00:00.000Z",
-  "updatedAt": "2025-06-23T21:30:00.000Z"
+  }
 }
 ```
 

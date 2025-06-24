@@ -2,11 +2,19 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs').promises;
 const path = require('path');
+const {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  catchAsync
+} = require('../utils/errors');
 
 const router = express.Router();
 const DATA_FILE = process.env.NODE_ENV === 'test' 
   ? path.join(__dirname, '../data/test-users.json')
   : path.join(__dirname, '../data/users.json');
+
+console.log('[users.js] NODE_ENV:', process.env.NODE_ENV, '| DATA_FILE:', DATA_FILE);
 
 // Helper function to read users
 const readUsers = async () => {
@@ -39,127 +47,142 @@ const writeUsers = async (users) => {
 // Validation middleware
 const validateRequest = (validations) => {
   return async (req, res, next) => {
-    await Promise.all(validations.map(validation => validation.run(req)));
-    
-    const errors = validationResult(req);
-    if (errors.isEmpty()) {
-      return next();
+    try {
+      await Promise.all(validations.map(validation => validation.run(req)));
+      
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        const errorDetails = errors.array().map(err => ({
+          field: err.param,
+          message: err.msg,
+          location: err.location,
+          value: err.value
+        }));
+        return next(new ValidationError(errorDetails));
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    
-    res.status(400).json({ 
-      errors: errors.array().map(err => ({
-        param: err.param,
-        message: err.msg,
-        location: err.location
-      })) 
-    });
   };
 };
 
 // Validation rules
 const createUserValidation = [
-  body('name')
-    .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: 100 }).withMessage('Name must be less than 100 characters'),
-    
+  body('name').trim().notEmpty().withMessage('Name is required'),
   body('username')
     .trim()
     .notEmpty().withMessage('Username is required')
-    .isLength({ min: 3, max: 30 }).withMessage('Username must be between 3-30 characters')
-    .matches(/^[a-zA-Z0-9_.-]+$/).withMessage('Username can only contain letters, numbers, underscores, periods, and hyphens'),
-    
+    .isLength({ min: 3 }).withMessage('Username must be at least 3 characters')
+    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores'),
   body('email')
     .trim()
     .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email')
-    .normalizeEmail(),
-    
-  body('address').optional().isObject().withMessage('Address must be an object'),
-  body('address.street').optional().trim().isLength({ max: 200 }).withMessage('Street must be less than 200 characters'),
-  body('address.city').optional().trim().isLength({ max: 100 }).withMessage('City must be less than 100 characters'),
-  body('address.zipcode').optional().trim().isLength({ max: 20 }).withMessage('Zipcode must be less than 20 characters'),
-  
-  // Sanitize all string fields to prevent XSS
-  body('*').escape()
+    .isEmail().withMessage('Please provide a valid email'),
+  body('address.street').optional().trim(),
+  body('address.city').optional().trim(),
+  body('address.zipcode').optional().trim(),
 ];
 
-// For updates, all fields are optional but must be valid if provided
 const updateUserValidation = [
-  body('name')
-    .optional()
-    .trim()
-    .isLength({ max: 100 }).withMessage('Name must be less than 100 characters'),
-    
+  body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
   body('username')
     .optional()
     .trim()
-    .isLength({ min: 3, max: 30 }).withMessage('Username must be between 3-30 characters')
-    .matches(/^[a-zA-Z0-9_.-]+$/).withMessage('Username can only contain letters, numbers, underscores, periods, and hyphens'),
-    
+    .isLength({ min: 3 }).withMessage('Username must be at least 3 characters')
+    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores'),
   body('email')
     .optional()
     .trim()
-    .isEmail().withMessage('Please provide a valid email')
-    .normalizeEmail(),
-    
-  body('address').optional().isObject().withMessage('Address must be an object'),
-  body('address.street').optional().trim().isLength({ max: 200 }).withMessage('Street must be less than 200 characters'),
-  body('address.city').optional().trim().isLength({ max: 100 }).withMessage('City must be less than 100 characters'),
-  body('address.zipcode').optional().trim().isLength({ max: 20 }).withMessage('Zipcode must be less than 20 characters'),
-  
-  // Sanitize all string fields to prevent XSS
-  body('*').escape()
+    .isEmail().withMessage('Please provide a valid email'),
+  body('address.street').optional().trim(),
+  body('address.city').optional().trim(),
+  body('address.zipcode').optional().trim(),
 ];
 
-// Get all users
-router.get('/', async (req, res, next) => {
-  try {
-    const users = await readUsers();
-    res.json(users);
-  } catch (error) {
-    next(error);
+// Search users by query
+router.get('/search', catchAsync(async (req, res) => {
+  const { q } = req.query;
+  if (!q) {
+    return res.status(400).json({ error: 'Search query is required' });
   }
-});
 
-// Search users by name
-router.get('/search', async (req, res, next) => {
-  try {
-    const { q } = req.query;
-    if (!q) {
-      return res.status(400).json({ error: 'Search query parameter "q" is required' });
-    }
-    
-    const users = await readUsers();
-    const filteredUsers = users.filter(user => 
-      user.name.toLowerCase().includes(q.toLowerCase())
-    );
-    
-    res.json(filteredUsers);
-  } catch (error) {
-    next(error);
+  const users = await readUsers();
+  const searchTerm = q.toLowerCase();
+  
+  const results = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm) ||
+    user.username.toLowerCase().includes(searchTerm) ||
+    user.email.toLowerCase().includes(searchTerm) ||
+    (user.address && (
+      (user.address.street && user.address.street.toLowerCase().includes(searchTerm)) ||
+      (user.address.city && user.address.city.toLowerCase().includes(searchTerm)) ||
+      (user.address.zipcode && user.address.zipcode.includes(searchTerm))
+    ))
+  );
+
+  // Return the results array directly to match frontend expectations
+  res.json(results);
+}));
+
+// Get all users with optional filtering
+router.get('/', catchAsync(async (req, res) => {
+  let users = await readUsers();
+  
+  // Apply filters if query parameters are provided
+  if (Object.keys(req.query).length > 0) {
+    users = users.filter(user => {
+      return Object.entries(req.query).every(([key, value]) => {
+        // Skip search query as it's handled by the search endpoint
+        if (key === 'q') return true;
+        
+        // Handle nested properties (e.g., address.city)
+        const keys = key.split('.');
+        let prop = user;
+        for (const k of keys) {
+          if (!prop || typeof prop !== 'object' || !(k in prop)) {
+            return false;
+          }
+          prop = prop[k];
+        }
+        return String(prop).toLowerCase().includes(String(value).toLowerCase());
+      });
+    });
   }
-});
+  
+  // Return the users array directly to match frontend expectations
+  res.json(users);
+}));
 
 // Get user by ID
-router.get('/:id', async (req, res, next) => {
-  try {
-    const users = await readUsers();
-    const userId = req.params.id;
-    const user = users.find(u => u.id === userId || u.id === parseInt(userId));
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(user);
-  } catch (error) {
-    next(error);
+router.get('/:id', catchAsync(async (req, res) => {
+  const users = await readUsers();
+  const userId = req.params.id;
+  
+  // Handle both string and number IDs
+  const user = users.find(u => u.id == userId);
+  
+  if (!user) {
+    return res.status(404).json({ status: 'error', message: 'User not found' });
   }
-});
+  
+  // Return the user object directly to match frontend expectations
+  res.json(user);
+}));
+
 
 // Create a new user
-router.post('/', validateRequest(createUserValidation), async (req, res, next) => {
+router.post('/',
+  (req, res, next) => {
+    console.log('PRE-VALIDATION req.body:', req.body);
+    next();
+  },
+  validateRequest(createUserValidation),
+  catchAsync(async (req, res) => {
+  console.log('Received POST /api/users body:', JSON.stringify(req.body, null, 2));
+  console.log('Type of req.body.address:', typeof req.body.address);
+  console.log('Is req.body.address an array?', Array.isArray(req.body.address));
+  console.log('req.body.address:', req.body.address);
   try {
     const users = await readUsers();
     
@@ -169,84 +192,132 @@ router.post('/', validateRequest(createUserValidation), async (req, res, next) =
     );
     
     if (existingUser) {
-      return res.status(400).json({
-        error: 'User with this username or email already exists'
-      });
+      const field = existingUser.username === req.body.username ? 'username' : 'email';
+      return res.status(409).json({ status: 'fail', message: `User with this ${field} already exists` });
     }
     
+    // Create a new user with proper address handling (no timestamps)
     const newUser = { 
       id: Date.now().toString(), 
-      ...req.body,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      name: req.body.name,
+      username: req.body.username,
+      email: req.body.email,
+      address: {
+        street: req.body.address?.street || req.body.street || '',
+        city: req.body.address?.city || req.body.city || '',
+        zipcode: req.body.address?.zipcode || req.body.zipcode || '',
+        geo: req.body.address?.geo || { lat: '', lng: '' }
+      },
+      phone: req.body.phone || '',
+      website: req.body.website || '',
+      company: req.body.company || { name: '', catchPhrase: '', bs: '' }
     };
     
     users.push(newUser);
     await writeUsers(users);
     
+    // Remove unwanted fields from response
     res.status(201).json(newUser);
   } catch (error) {
-    next(error);
+    console.error('Error creating user:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
-});
+}));
 
 // Update a user
-router.put('/:id', validateRequest(updateUserValidation), async (req, res, next) => {
+router.put('/:id', validateRequest(updateUserValidation), catchAsync(async (req, res) => {
   try {
+    console.log('Update user request received:', { params: req.params, body: req.body });
+    
     const users = await readUsers();
-    const index = users.findIndex(u => u.id === req.params.id);
+    const userId = req.params.id;
+    const index = users.findIndex(u => u.id == userId);
+    
+    console.log('Found user at index:', index, 'with ID:', userId);
     
     if (index === -1) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log('User not found with ID:', userId);
+      return res.status(404).json({ status: 'error', message: 'User not found' });
     }
     
-    // Check if new username or email already exists (excluding current user)
-    if (req.body.username || req.body.email) {
-      const existingUser = users.find(user => 
-        user.id !== req.params.id && 
+    console.log('Checking for duplicate username or email...');
+    // Check for duplicate username or email
+    const duplicateUser = users.find(
+      (user, i) => 
+        i !== index && 
         (user.username === req.body.username || user.email === req.body.email)
-      );
-      
-      if (existingUser) {
-        return res.status(400).json({
-          error: 'Username or email is already in use by another user'
-        });
-      }
+    );
+    
+    if (duplicateUser) {
+      console.log('Duplicate user found:', { 
+        existingUser: { id: duplicateUser.id, username: duplicateUser.username, email: duplicateUser.email },
+        newData: { username: req.body.username, email: req.body.email }
+      });
+      return res.status(409).json({ status: 'fail', message: 'Username or email already in use' });
     }
     
-    const updatedUser = { 
-      ...users[index], 
-      ...req.body,
-      updatedAt: new Date().toISOString()
+    console.log('Updating user...');
+    // Create a clean update object with only the fields we want to update
+    // Helper to ensure address is a plain object
+    function safeAddress(val) {
+      return val && typeof val === "object" && !Array.isArray(val) ? val : {};
+    }
+
+    const updateData = {
+      name: req.body.name,
+      username: req.body.username,
+      email: req.body.email,
+      phone: req.body.phone || users[index].phone,
+      website: req.body.website || users[index].website,
+      company: req.body.company || users[index].company || {},
+      // Handle address updates properly
+      address: {
+        ...(users[index].address || {}), // Keep existing address fields
+        ...safeAddress(req.body.address) // Only merge if address is a plain object
+      }
+    };
+    
+    // Create a clean user object with only the properties we want
+    const { id } = users[index];
+    const updatedUser = {
+      id,
+      name: updateData.name,
+      username: updateData.username,
+      email: updateData.email,
+      phone: updateData.phone,
+      website: updateData.website,
+      company: updateData.company,
+      address: updateData.address
     };
     
     users[index] = updatedUser;
+    
+    console.log('Writing updated users to file...');
     await writeUsers(users);
     
+    console.log('User updated successfully:', { userId, updatedUser });
+    // Return the updated user directly
     res.json(updatedUser);
   } catch (error) {
-    next(error);
+    console.error('Error in update user route:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
-});
+}));
 
-// Delete user
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const users = await readUsers();
-    const userId = req.params.id;
-    const index = users.findIndex(u => u.id === userId);
-    
-    if (index === -1) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    users.splice(index, 1);
-    await writeUsers(users);
-    
-    res.status(204).end();
-  } catch (error) {
-    next(error);
+// Delete a user
+router.delete('/:id', catchAsync(async (req, res) => {
+  const users = await readUsers();
+  const userId = req.params.id;
+  const index = users.findIndex(u => u.id == userId);
+  
+  if (index === -1) {
+    return res.status(404).json({ status: 'error', message: 'User not found' });
   }
-});
+  
+  users.splice(index, 1);
+  await writeUsers(users);
+  
+  res.status(204).end();
+}));
 
 module.exports = router;
