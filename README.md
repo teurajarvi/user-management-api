@@ -83,9 +83,17 @@ The API will be available at `http://localhost:3000`
 
 ### Start the Frontend
 
+You can start the frontend with either command:
+
 ```bash
 cd frontend
 npm run dev
+```
+
+or
+
+```bash
+npm start
 ```
 
 The frontend will be available at `http://localhost:5173`
@@ -139,8 +147,6 @@ npm install
 # Run all tests
 npm test
 
-# Run tests in watch mode (auto-rerun on file changes)
-npm run test:watch
 ```
 
 ### Test Structure
